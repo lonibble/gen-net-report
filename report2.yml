@@ -105,7 +105,7 @@
           ===[ {{inventory_hostname}} Device Report ]===
           - Date: {{lookup('pipe','date +%Y-%m-%d@%H:%M')}}
             
-          ===[ Vital Information ]===
+          ===[ Device Information ]===
           - Hostname: {{ansible_net_hostname}}
           - Management IP: {{ansible_host}}
           - Model: {{ansible_net_model}}
