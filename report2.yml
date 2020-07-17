@@ -1,0 +1,114 @@
+---
+- name: Device Report - IOS
+  hosts: hosts
+  connection: network_cli
+  gather_facts: no
+ 
+  tasks:
+  - name: create timestamp
+    set_fact:
+      timestamp: "{{ lookup('pipe','date +%Y-%m-%d@%H:%M:%S') }}"
+ 
+  - name: gather facts from IOS device
+    ios_facts:
+   
+  - name: Create file
+    file:
+      path: ./reports/{{ inventory_hostname }}.{{ timestamp }}.switch_report.txt
+      state: touch
+ 
+  - name: Collecting data from device
+    ios_command:
+      commands:
+        - show interfaces description | include up 
+        - show ip interface brief | exclude unassigned
+        - show cdp neighbors
+        - show lldp neighbors
+        - show mac address-table
+        - show ip arp
+        - show ip route
+    register: output
+ 
+  - name: Writing data to file
+    blockinfile:
+      dest: ./reports/{{inventory_hostname}}.{{timestamp}}.switch_report.txt
+      marker: ""
+      insertafter: EOF
+      block: |
+        - ===[Active Interfaces]===
+          {{output.stdout[0]}}
+
+          ===[ L3 Interfaces ]===
+          {{output.stdout[1]}}
+         
+          ===[ CDP Neighbors ]===
+         {{output.stdout[2]}}
+
+         ===[ LLDP Neighbors ]===
+         {{output.stdout[3]}}
+          
+         ===[ MAC Address Table ]===
+         {{output.stdout[4]}}
+
+         ===[ ARP Table ]===
+         {{output.stdout[5]}}
+
+         ===[ Route Table ]===
+         {{output.stdout[6]}}
+          
+  - name: Writing header to file
+    blockinfile:
+      dest: ./reports/{{inventory_hostname}}.{{timestamp}}.switch_report.txt
+      marker: ""
+      block: |
+        - MMMMMMMMMMMMMMMMMWMMMWMMMMWNKkoc;'...........';:ox0XWMMMWWMMMMMMMMMMMMMMMMMMMMM
+          MMMMMMMMMMMMMMMMMWWWMWX0xo:,'..                 ...,:lxOKWMMWMMWMMMMMMMMMMMMMMM
+          MMMMMMMMMMMMMMMMMWN0d:'...       ...                  ..':oONWMMMMMMMMMMMMMMMMM
+          MMMMMMMMMMMMMMMNOo,.             ..    .              .    .,lkNMMMMMMMMMMMMMMM
+          MMMMMMMMWMMMWXd;.                                             .,oKWWWMMMMMMMMMM
+          MMMMMMMMMWWKo.                                                   .cONWMMMMMMMMM
+          MMMMMMMMWKl. .                                                     .c0WMMMMMMMM
+          MMMMMMMNd.                       .    ....   .                     . .lKMMMMMMM
+          WWMMMW0;.     .                     .:kO0Oo.                          .,kNMWMMM
+          WWMMNx'                             :KMMMMWx.                       .   .oXWMMM
+          MMWNd.                             ;0WMMMMMNo.                           .cXMMW
+          MMNo.                             'OWMWMMMMMXc.                         . .cXMM
+          MWd.   .                       . .xWMMNX0KWMMK;                         .  .oNM
+          MO'                             .dNWMWk:':XWWW0, .                          .xW
+          Xc                             .lNMMM0,  .oNWWWk. ..                         ;K
+          k.                             :XMMMK:    .dWWMWx.    ..                     .d
+          c    .                       .,0MWWNl.   . .kWWMNo.                           ;
+          ,    ..                      'OWMMNd.  ..   ,0WWMXc .  .                      .
+          . .                       . .xWWMM0,      .  :KMMMK;.                         .
+          . .                      . .oNMMMMNOl.       .lNMMM0,                          
+          .   .                     .lNWMWWWWMWXxl:.  . .dWMMWk'                       ..
+          .                        .:KWMMXockXWWWWNOl'.  .xWWWWd.                       .
+          ,                        ;KMMMWd. .,dKWWWWWXx:. 'OWWWNo.                      .
+          l                       'OWMMWk.  .  .cokNWMMW0o,:0MMMXc.                     ;
+          k.                .    .xWMMW0,         .,dKWMMWXk0WWWWK:                    .d
+          Nc .                . .dNWWWK:            ..ckNMMWWMMWWM0,      .        ..  :K
+          M0,  .          ..   .lXWWWNl  .        .    .;dKWMWWWMMWk.   ..         .  .kW
+          MWx.             .   :KWWMWd.              .   ..ckNWMWWMWd.               .dNM
+          WMNd.               ,0MWMWk.                      .;dKWMWWO' .  .         .lXMM
+          MMMWx.             .;ooool,    .                    ..:dxo,. .           .oNMMW
+          MMMWWk'  .       .          .                     .    ..            .  .xWWWMM
+          MMWMMW0:.  .   .    .   .  ..                          .. .       .   .;OWMMWWM
+          MMMMMMMNk,.                                                       .  'dXMMMMMMM
+          MMMMMMMMMXd'       .                                               'lKWMMMMMMMM
+          MMMMMMMMWMWXd,.                                           .     .'oKWWWWMMMMMMM
+          MMMMMMMMMMWMMXx:..                                         .  .:xXMWWWWWMMMMMMM
+          MMMMMMMMMMMMMMMWKx:..   .                                  .:d0NMMMMMMMMMMMMMMM
+          MMMMMMMMMMMMMMMMMMWXkl;...                     .      ..;lxKNMMWMMMMMMMMMMMMMMM
+          MMMMMMMMMMMMMMMMMMMMMWNKOxl:,...               ...,:ldkKNWWMWWMMMMMMMMMMMMMMMMM
+          MMMMMMMMMMMMMMMMMMMMMWMMMMMMNX0OxxdollllllllodkO0KXWMMMMWWMMMMMMMMMMMMMMMMMMMMM
+         
+          ===[ {{inventory_hostname}} Device Report ]===
+          - Date: {{lookup('pipe','date +%Y-%m-%d@%H:%M')}}
+            
+          ===[ Vital Information ]===
+          - Hostname: {{ansible_net_hostname}}
+          - Management IP: {{ansible_host}}
+          - Model: {{ansible_net_model}}
+          - Serial Number: {{ansible_net_serialnum}}
+          - IOS version: {{ansible_net_version}}
+ 
