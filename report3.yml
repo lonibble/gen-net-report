@@ -24,7 +24,7 @@
         - show ip route
     register: output
 
-  - name: generate leaf config
+  - name: generate report
     template: 
       src=report.j2
       dest=./reports/{{ inventory_hostname }}.{{ timestamp }}.switch_report.txt
